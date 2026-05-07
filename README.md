@@ -1,4 +1,4 @@
-# T1 — Análise do utilitário pwd.c
+# T1 — Análise do utilitário pwd.c - Henrique Knack
 
 Trabalho de análise do código-fonte do utilitário `pwd` do GNU Coreutils,
 produzindo um relatório em LaTeX sobre histórico, idiomas, blocos de código

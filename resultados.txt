@@ -1,0 +1,93 @@
+Análise do utilitário pwd — resultados de execução
+Gerado em: 2026-05-07 11:37:39
+
+============================================================
+  1. EXECUÇÃO DO PROGRAMA
+============================================================
+
+--- Diretório atual ---
+$ pwd
+/home/henriqueknack/Desktop/T1SOFTWAREBASICO
+
+--- Flag -P (caminho físico, resolve symlinks) ---
+$ ln -sf /tmp /tmp/tmp.dQMbDRbeaX/link_demo
+$ cd /tmp/tmp.dQMbDRbeaX/link_demo && pwd -P
+/tmp
+$ cd /tmp/tmp.dQMbDRbeaX/link_demo && pwd -L
+/tmp/tmp.dQMbDRbeaX/link_demo
+
+--- Diretório temporário ---
+$ cd /tmp/tmp.Cay6F3eCIl && pwd
+/tmp/tmp.Cay6F3eCIl
+
+--- Ajuda (--help, primeiras 5 linhas) ---
+$ pwd --help
+Usage: /usr/bin/pwd [OPTION]...
+Print the full filename of the current working directory.
+
+  -L, --logical   use PWD from environment, even if it contains symlinks
+  -P, --physical  avoid all symlinks
+
+============================================================
+  2. TESTES AUTOMATIZADOS
+============================================================
+
+--- test_basic.sh ---
+PASS: saída padrão == $PWD
+PASS: código de saída 0
+PASS: sem barra final
+PASS: saída termina com newline
+PASS: funciona em tmpdir
+
+Resultado: 5 passou(aram), 0 falhou(aram)
+
+--- test_flags.sh ---
+PASS: pwd -P resolve symlink para caminho real
+PASS: pwd -L preserva caminho com symlink
+PASS: pwd -L com $PWD=link retorna caminho lógico
+PASS: -P e -L divergem em symlink
+
+Resultado: 4 passou(aram), 0 falhou(aram)
+
+============================================================
+  3. ANÁLISE DE MEMÓRIA
+============================================================
+
+--- strace: chamadas brk (heap) ---
+$ strace -e trace=brk pwd
+brk(NULL)                               = 0x61a087ea0000
+brk(NULL)                               = 0x61a087ea0000
+brk(0x61a087ec1000)                     = 0x61a087ec1000
+/home/henriqueknack/Desktop/T1SOFTWAREBASICO
++++ exited with 0 +++
+
+--- gdb: mapeamento de memória (info proc mappings) ---
+$ gdb -batch -ex 'break *0x2e50' -ex run -ex 'info proc mappings' /usr/bin/pwd
+Breakpoint 1 at 0x2e50
+Warning:
+Cannot insert breakpoint 1.
+Cannot access memory at address 0x2e50
+process 112734
+Mapped address spaces:
+          Start Addr           End Addr       Size     Offset  Perms  objfile
+      0x555555554000     0x555555556000     0x2000        0x0  r--p   /usr/bin/pwd
+      0x555555556000     0x55555555a000     0x4000     0x2000  r-xp   /usr/bin/pwd
+      0x55555555a000     0x55555555b000     0x1000     0x6000  r--p   /usr/bin/pwd
+      0x55555555b000     0x55555555d000     0x2000     0x7000  rw-p   /usr/bin/pwd
+      0x7ffff7fbd000     0x7ffff7fc1000     0x4000        0x0  r--p   [vvar]
+      0x7ffff7fc1000     0x7ffff7fc3000     0x2000        0x0  r--p   [vvar_vclock]
+      0x7ffff7fc3000     0x7ffff7fc5000     0x2000        0x0  r-xp   [vdso]
+      0x7ffff7fc5000     0x7ffff7fc6000     0x1000        0x0  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7ffff7fc6000     0x7ffff7ff1000    0x2b000     0x1000  r-xp   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7ffff7ff1000     0x7ffff7ffb000     0xa000    0x2c000  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7ffff7ffb000     0x7ffff7fff000     0x4000    0x36000  rw-p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7ffffffdd000     0x7ffffffff000    0x22000        0x0  rw-p   [stack]
+  0xffffffffff600000 0xffffffffff601000     0x1000        0x0  --xp   [vsyscall]
+	Inferior 1 [process 112734] will be killed.
+
+--- size: seções do binário ---
+$ size /usr/bin/pwd
+   text	   data	    bss	    dec	    hex	filename
+  24353	   1376	    296	  26025	   65a9	/usr/bin/pwd
+============================================================
+Arquivo gerado: resultados.txt
