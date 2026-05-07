@@ -22,8 +22,9 @@ test-gdb:
 	@echo "=== Stack trace (gdb) ==="
 	gdb -batch \
 		-ex "set args" \
-		-ex run \
+		-ex "starti" \
 		-ex "info proc mappings" \
+		-ex continue \
 		-ex quit \
 		$(BINARY)
 
